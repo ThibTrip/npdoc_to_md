@@ -38,11 +38,11 @@ Clone the repository with <code>git clone https://github.com/ThibTrip/npdoc_to_m
 
 The repository shall be added to PyPI soon 🐍.
 
-# Demo
+# Demos
 
-Demonstration with the docstring of pandas.Series.
+## First demo: Demonstration with the docstring of pandas.Series.
 
-## Before
+### Before
 
 ```
 Two-dimensional, size-mutable, potentially heterogeneous tabular data.
@@ -121,7 +121,7 @@ Constructing DataFrame from numpy ndarray:
 2  7  8  9
 ```
 
-## After
+### After
 
 **<span style="color:purple">pd.DataFrame</span>_(data=None, index: Union[Collection, NoneType] = None, columns: Union[Collection, NoneType] = None, dtype: Union[str, numpy.dtype, ForwardRef('ExtensionDtype'), NoneType] = None, copy: bool = False)_**
 
@@ -200,6 +200,10 @@ a  b  c
 1  4  5  6
 2  7  8  9
 ```
+
+## Second demo: the library pangres (also from me) which uses markdown tables in examples!
+
+See https://github.com/ThibTrip/pangres/wiki/Upsert#examples
 
 # Usage
 
