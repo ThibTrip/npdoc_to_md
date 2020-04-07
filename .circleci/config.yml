@@ -16,7 +16,7 @@ jobs:
           python3 -m venv venv
           . venv/bin/activate
           pip install -r requirements.txt
-          pip install pandas codecov coverage pytest pytest-cov
+          pip install pandas tabulate codecov coverage pytest pytest-cov
     - save_cache:
         paths:
         - ./venv
@@ -27,7 +27,7 @@ jobs:
           . venv/bin/activate
           # install package (fetches setup.py in current directory)
           pip install .
-          pytest -s -v npdoc_to_md --cov=./npdoc_to_md
+          pytest -s -v npdoc_to_md --cov=./npdoc_to_md --doctest-modules
           codecov
 workflows:
   version: 2

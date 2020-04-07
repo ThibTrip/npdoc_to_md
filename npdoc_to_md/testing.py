@@ -72,7 +72,7 @@ def example_func(a:int, b:int, useless_param=None) -> int:
     * fourth example (raw code block)
     {{raw}}
     >>> print('Hello world!')
-    'Hello world!'
+    Hello world!
 
     Returns
     -------
@@ -164,7 +164,7 @@ class ExampleClass():
         --------
         >>> ex = ExampleClass('john', 'doe')
         >>> ex.example_method()
-        'john'
+        john
         """
         print(self.first_name)
         

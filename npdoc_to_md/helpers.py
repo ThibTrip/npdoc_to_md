@@ -464,7 +464,7 @@ def numpydoc_section_to_md_lines(numpydoc_obj, section_name,
      "print('Hello world!')",
      '```',
      '```',
-     "'Hello world!'",
+     'Hello world!',
      '```',
      '']
     """
