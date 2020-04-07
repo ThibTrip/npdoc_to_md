@@ -75,3 +75,5 @@ When you do this for an example, this overrides the key "ex_md_flavor" in placeh
 [Previewing markdown strings with IPython!](https://github.com/ThibTrip/npdoc_to_md/wiki/Preview)
 
 [Getting markdown files in a directory](https://github.com/ThibTrip/npdoc_to_md/wiki/List-markdown-files-in-dir)
+
+[Example script I used to generate the documentation for npdoc_to_md](https://github.com/ThibTrip/npdoc_to_md/wiki/Example-script)
