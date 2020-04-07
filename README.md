@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/ThibTrip/npdoc_to_md/tree/master.svg?style=svg&circle-token=e33f9d9e628fde342e9acd4c43c2c939780bf1f0)](https://circleci.com/gh/ThibTrip/npdoc_to_md/tree/master) [![codecov](https://codecov.io/gh/ThibTrip/npdoc_to_md/branch/master/graph/badge.svg)](https://codecov.io/gh/ThibTrip/npdoc_to_md)
+
 # npdoc_to_md
 
 Turns numpy docstrings to pretty markdown.
@@ -223,5 +225,5 @@ pip install -e .
 # -s prints stdout
 # -v prints test parameters
 # --cov=./npdoc_to_md shows coverage only for npdoc_to_md
-pytest -s -v npdoc_to_md --cov=./npdoc_to_md
+pytest -s -v npdoc_to_md --cov=./npdoc_to_md --doctest-modules
 ```
