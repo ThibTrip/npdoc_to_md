@@ -12,11 +12,7 @@ Turns numpy docstrings to pretty markdown.
 
 [Installation](#Installation)
 
-[Demo](#Demo)
-
-&nbsp;&nbsp;&nbsp;&nbsp;[Before](#Before)
-
-&nbsp;&nbsp;&nbsp;&nbsp;[After](#After)
+[Demos](#Demos)
 
 [Usage](#Usage)
 
@@ -134,6 +130,10 @@ See https://github.com/ThibTrip/pangres/wiki/Upsert#examples
 # Usage
 
 Head over to npdoc_to_md's [wiki](https://github.com/ThibTrip/npdoc_to_md/wiki)!
+
+# Contributing
+
+Pull requests/issues are welcome.
 
 # Testing
 
