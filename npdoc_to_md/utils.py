@@ -18,7 +18,8 @@ def get_markdown_files_in_dir(dir_path:str) -> dict:
 
     Examples
     --------
-    >>> files, names = get_markdown_files_in_dir(".") # doctest: +SKIP
+    >>> files_and_names = get_markdown_files_in_dir(".") # doctest: +SKIP
+    {'/home/user/README.md':'README.md'}
     """
     paths = (os.path.join(dir_path, fn) for fn in next(os.walk(dir_path))[2])
     paths = [os.path.abspath(p) for p in paths if p.lower().endswith('.md')]
