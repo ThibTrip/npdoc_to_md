@@ -1,0 +1,1 @@
+{{"obj":"npdoc_to_md.render_md_from_obj_docstring"}}

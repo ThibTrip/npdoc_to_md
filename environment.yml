@@ -1,0 +1,5 @@
+name: npdoc_to_md-dev
+dependencies:
+  - pandas
+  - pytest
+  - pytest-cov

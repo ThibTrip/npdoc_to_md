@@ -1,0 +1,7 @@
+include README.md
+include npdoc_to_md/docs/Home.md
+include npdoc_to_md/docs/List markdown files in dir.md
+include npdoc_to_md/docs/Preview.md
+include npdoc_to_md/docs/README.md
+include npdoc_to_md/docs/Render file.md
+include npdoc_to_md/docs/Render from object.md
