@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/ThibTrip/npdoc_to_md/tree/master.svg?style=svg&circle-token=e33f9d9e628fde342e9acd4c43c2c939780bf1f0)](https://circleci.com/gh/ThibTrip/npdoc_to_md/tree/master) [![codecov](https://codecov.io/gh/ThibTrip/npdoc_to_md/branch/master/graph/badge.svg)](https://codecov.io/gh/ThibTrip/npdoc_to_md)
+[![CircleCI](https://circleci.com/gh/ThibTrip/npdoc_to_md/tree/master.svg?style=svg&circle-token=e33f9d9e628fde342e9acd4c43c2c939780bf1f0)](https://circleci.com/gh/ThibTrip/npdoc_to_md/tree/master) [![codecov](https://codecov.io/gh/ThibTrip/npdoc_to_md/branch/master/graph/badge.svg)](https://codecov.io/gh/ThibTrip/npdoc_to_md) [![PyPI version](https://img.shields.io/pypi/v/npdoc_to_md)](https://img.shields.io/pypi/v/npdoc_to_md)
 
 # npdoc_to_md
 
@@ -32,9 +32,7 @@ Turns numpy docstrings to pretty markdown.
 
 # Installation
 
-Clone the repository with <code>git clone https://github.com/ThibTrip/npdoc_to_md.git</code>. Then while still in the same folder install with pip <code>pip install ./npdoc_to_md</code>.
-
-The repository shall be added to PyPI soon 🐍.
+<code>pip install npdoc_to_md</code>.
 
 # Demos
 
