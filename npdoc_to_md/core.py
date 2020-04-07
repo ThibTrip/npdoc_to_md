@@ -205,7 +205,7 @@ def render_md_file(source, destination=None, allow_same_path=False):
     Raises
     ------
     ValueError
-        If destination is the same as source
+        If destination is the same as source and allow_same_path is False
     
     Examples
     --------
