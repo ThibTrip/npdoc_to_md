@@ -19,12 +19,12 @@ with open(os.path.join(here, "requirements.txt"),"r") as f:
 
 setuptools.setup(
     name="npdoc_to_md",
-    version="0.1",
+    version="0.2",
     license = 'The Unlicense',
     author="Thibault Bétrémieux",
     author_email="thibault.betremieux@gmail.com",
     url = 'https://github.com/ThibTrip/npdoc_to_md',
-    download_url = 'https://github.com/ThibTrip/npdoc_to_md/archive/v0.1.tar.gz',
+    download_url = 'https://github.com/ThibTrip/npdoc_to_md/archive/v0.2.tar.gz',
     keywords = ['numpydoc','documentation', 'docstrings', 'python'],
     description=description,
     long_description=long_description,
