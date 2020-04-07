@@ -26,7 +26,7 @@ jobs:
           . venv/bin/activate
           # install package (fetches setup.py in current directory)
           pip install .
-          pip install codecov coverage pytest pytest-cov
+          pip install pandas codecov coverage pytest pytest-cov
           pytest -s -v npdoc_to_md --cov=npdoc_to_md
           codecov
 workflows:
