@@ -122,6 +122,14 @@ Constructing DataFrame from numpy ndarray:
 **<span style="color:purple">pd.DataFrame</span>_(data=None, index: Union[Collection, NoneType] = None, columns: Union[Collection, NoneType] = None, dtype: Union[str, numpy.dtype, ForwardRef('ExtensionDtype'), NoneType] = None, copy: bool = False)_**
 
 
+Two-dimensional, size-mutable, potentially heterogeneous tabular data.
+
+
+Data structure also contains labeled axes (rows and columns).
+Arithmetic operations align on both row and column labels. Can be
+thought of as a dict-like container for Series objects. The primary
+pandas data structure.
+
 #### Parameters
 * data : <b><i>ndarray (structured or homogeneous), Iterable, dict, or DataFrame</i></b>  Dict can contain Series, arrays, constants, or list-like objects.
 	
@@ -223,5 +231,5 @@ pip install -e .
 # -s prints stdout
 # -v prints test parameters
 # --cov=./npdoc_to_md shows coverage only for npdoc_to_md
-pytest -s -v npdoc_to_md --cov=./npdoc_to_md --doctest-modules
+pytest -s -vv npdoc_to_md --cov=./npdoc_to_md --doctest-modules
 ```

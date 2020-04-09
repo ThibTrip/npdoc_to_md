@@ -147,5 +147,5 @@ pip install -e .
 # -s prints stdout
 # -v prints test parameters
 # --cov=./npdoc_to_md shows coverage only for npdoc_to_md
-pytest -s -v npdoc_to_md --cov=./npdoc_to_md --doctest-modules
+pytest -s -vv npdoc_to_md --cov=./npdoc_to_md --doctest-modules
 ```
