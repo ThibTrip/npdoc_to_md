@@ -93,7 +93,7 @@ def render_md_from_obj_docstring(obj, obj_namespace, examples_md_flavor='python'
         # for instance this happened with the section Attributes of pd.DataFrame
         header_exists = any(l.strip().startswith(section_name)
                             for l in obj.__doc__.splitlines())
-        if not header_exists:
+        if not header_exists and section_name not in ('Summary', 'Extended Summary'):
             continue
         converted = numpydoc_section_to_md_lines(doc,
                                                  section_name=section_name,
