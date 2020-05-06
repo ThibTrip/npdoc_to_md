@@ -10,7 +10,7 @@ from npdoc_to_md import render_md_from_obj_docstring
 # # Expectations
 
 # +
-expected_md1 = """**<span style="color:purple">example_func</span>_(a: int, b: int, useless_param=None) -> int_**
+expected_md1 = """**<span style="color:purple">example&#95;func</span>_(a: int, b: int, useless_param=None) -> int_**
 
 
 Example function that sums to integers.
