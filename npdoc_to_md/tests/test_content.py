@@ -5,6 +5,7 @@ from npdoc_to_md.testing import (example_func,
                                  ExampleClass)
 
 from npdoc_to_md import render_md_from_obj_docstring
+import pytest
 # -
 
 # # Expectations
@@ -88,7 +89,7 @@ print('Hello world!')
 Hello world!
 ```"""
 
-expected_md2 = """**<span style="color:purple">example_func2</span>_(nb_vals=10)_**
+expected_md2 = """**<span style="color:purple">example&#95;func2</span>_(nb_vals=10)_**
 
 
 Generator example (for testing the parsing of Yields and Receives sections).
@@ -100,7 +101,7 @@ Generator example (for testing the parsing of Yields and Receives sections).
 #### Receives
 * nb_vals : <b><i>int, default 10</i></b>  Number of values to yield."""
 
-expected_md3 = """**<span style="color:purple">example_func3</span>_()_**
+expected_md3 = """**<span style="color:purple">example&#95;func3</span>_()_**
 
 
 Dummy function for testing See Also section in example_func."""
@@ -128,13 +129,10 @@ ex = ExampleClass('john', 'doe')
 
 # # Test rendering
 
-def test_rendering():
-    md1 = render_md_from_obj_docstring(example_func, 'example_func')
-    md2 = render_md_from_obj_docstring(example_func2, 'example_func2')
-    md3 = render_md_from_obj_docstring(example_func3, 'example_func3')
-    md4 = render_md_from_obj_docstring(ExampleClass, 'ExampleClass')
-
-    assert md1 == expected_md1
-    assert md2 == expected_md2
-    assert md3 == expected_md3
-    assert md4 == expected_md4
+@pytest.mark.parametrize("func, func_name, expected_md", [(example_func, 'example_func', expected_md1),
+                                                          (example_func2, 'example_func2', expected_md2),
+                                                          (example_func3, 'example_func3', expected_md3),
+                                                          (ExampleClass, 'ExampleClass', expected_md4)])
+def test_rendering(func, func_name, expected_md):
+    md = render_md_from_obj_docstring(func, func_name)
+    assert md == expected_md
