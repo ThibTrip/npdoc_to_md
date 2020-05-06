@@ -69,8 +69,8 @@ def render_md_from_obj_docstring(obj, obj_namespace, examples_md_flavor='python'
     >>> 
     >>> md = render_md_from_obj_docstring(obj=Series, obj_namespace="pd.Series")
     """
-    # escape "_" indicating private functions/methods
-    obj_namespace = '\\' + obj_namespace if obj_namespace.startswith('_') else obj_namespace
+    # escape "_" (use HTML code as in some situations \_ may be displayed instead of _)
+    obj_namespace = obj_namespace.replace('_', '&#95;')
     # don't get the signature using numpydoc but instead use inspect and modify
     # the object name (this is useful if we use an alias e.g.
     # pd.DataFrame instead of pandas.DataFrame)
