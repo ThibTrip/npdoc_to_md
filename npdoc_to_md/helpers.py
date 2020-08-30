@@ -29,6 +29,22 @@ class ExampleParser():
         E.g.: ```python ...```
         There is a special flag "raw" for flavorless code
         markdown (``` ... ```).
+
+    Examples
+    --------
+    >>> ex = ExampleParser(lines=['* first example',
+    ...                           '{{markdown}}', # language for output
+    ...                           '>>> import pandas as pd',
+    ...                           '>>> df = pd.DataFrame({"A":[0, 1]})',
+    ...                           '>>> df.to_markdown()',
+    ...                           '|    |   A |',
+    ...                           '|---:|----:|',
+    ...                           '|  0 |   0 |',
+    ...                           '|  1 |   1 |',
+    ...                           '',
+    ...                           '* second example', 
+    ...                           '>>> 2+2',
+    ...                           '4']) # no language for output provided -> defaults to python
     """
     def __init__(self, lines, examples_md_flavor:str='python'):
         if isinstance(lines, str):
