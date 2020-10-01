@@ -34,7 +34,7 @@ Turns numpy docstrings to pretty markdown.
 
 # Installation
 
-<code>pip install npdoc_to_md</code>.
+<code>pip install npdoc_to_md</code>
 
 # Demos
 
