@@ -7,5 +7,5 @@ coverage:
   range: "85...100"
 
 ignore:
-  - "./npdoc_to_md/docs"
+  - "npdoc_to_md/docs"
 
