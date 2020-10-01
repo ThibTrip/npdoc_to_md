@@ -18,6 +18,8 @@ Turns numpy docstrings to pretty markdown.
 
 [Contributing](#Contributing)
 
+[Generating the documentation](#Generating-the-documentation)
+
 [Testing](#Testing)
 
 # Features
@@ -216,6 +218,26 @@ Head over to npdoc_to_md's [wiki](https://github.com/ThibTrip/npdoc_to_md/wiki)!
 # Contributing
 
 Pull requests/issues are welcome.
+
+# Generating the documentation
+
+All the documentation (this README and the wiki) needs to be **generated** from files contained in <b><code>./npdoc_to_md/docs</code></b>.
+
+This is easy to do with the included script <code>./npdoc_to_md/docs/generate_documentation.py</code>:
+
+1. Clone the repo if you have not already (<code>https://github.com/ThibTrip/npdoc_to_md.git</code>)
+2. Clone the wiki (<code>git clone https://github.com/ThibTrip/npdoc_to_md.wiki.git</code>)
+3. Execute the commands below in your terminal (while located in the root folder of npdoc_to_md that you have cloned on your computer). Replace <b><code>NPDOC_TO_MD_PATH</code></b> with the path where you cloned npdoc_to_md's repo and replace <b><code>WIKI_FOLDER_PATH</code></b> with the path to where you cloned the wiki. Note: don't mind the errors with the line "{{raw}}" and "{{python}}" for the file "Home.md" (since npdoc_to_md is rendering its own documentation things get a little weird).
+
+```
+cd ./npdoc_to_md/docs
+python generate_documentation.py NPDOC_TO_MD_PATH WIKI_FOLDER_PATH
+```
+
+4. Commit the changes in the wiki
+
+
+**IMPORTANT:** Do not modify the wiki or the README directly! Modify the files in <b><code>./npdoc_to_md/docs</code></b> instead.
 
 # Testing
 
