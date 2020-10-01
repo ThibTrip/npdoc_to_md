@@ -266,7 +266,7 @@ class ExampleParser():
         outputs = dict(zip(outputs,outputs_flavors))
         return outputs
 
-    def to_md_lines(self):
+    def to_md_lines(self, remove_doctest_blanklines=True):
         """
         Converts the lines provided at class instantiation
         to markdown lines.
@@ -350,7 +350,7 @@ class ExampleParser():
             return False
 
         # go over the lines and compare previous and next lines when available
-        for ix, line in enumerate(lines): 
+        for ix, line in enumerate(lines):
             previous_line = lines[ix-1] if ix != 0 else None
             next_line = lines[ix+1] if ix < len(lines) - 1 else None
 
@@ -388,13 +388,21 @@ class ExampleParser():
                 flavor = get_flavor_of_output(ix)
                 if flavor != 'markdown':
                     md_example_section.append('```')
+
+        # remove <BLANKLINE> used for doctest if so desired
+        # do this here to not break the logic above since we compare
+        # each line with its previous and next line
+        if remove_doctest_blanklines:
+            md_example_section = ['' if l == '<BLANKLINE>' else l for l in md_example_section]
         return md_example_section
 
 
 # # Function to convert numpydoc sections to markdown
 
 def numpydoc_section_to_md_lines(numpydoc_obj, section_name, 
-                                 examples_md_flavor='python', md_section_level='####'):
+                                 examples_md_flavor='python',
+                                 md_section_level='####',
+                                 remove_doctest_blanklines=True):
     """
     Converts a section of a numpydoc object (see Parameters)
     to lines of markdown strings.
@@ -537,7 +545,7 @@ def numpydoc_section_to_md_lines(numpydoc_obj, section_name,
     # very special case "Examples" section
     elif section_name == 'Examples':
         ex = ExampleParser(lines=section, examples_md_flavor=examples_md_flavor)
-        lines.extend(ex.to_md_lines())
+        lines.extend(ex.to_md_lines(remove_doctest_blanklines=remove_doctest_blanklines))
 
     # FINALIZE
     # add an empty line at the end of the section

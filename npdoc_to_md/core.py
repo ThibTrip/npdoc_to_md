@@ -26,7 +26,7 @@ logger.setLevel(logging.INFO)
 
 # # Parse from object
 
-def render_md_from_obj_docstring(obj, obj_namespace, examples_md_flavor='python'):
+def render_md_from_obj_docstring(obj, obj_namespace, examples_md_flavor='python', remove_doctest_blanklines=True):
     """
     Converts the docstring of an object (e.g. function, class, method)
     to a pretty markdown string.
@@ -61,6 +61,9 @@ def render_md_from_obj_docstring(obj, obj_namespace, examples_md_flavor='python'
         to create a markdown Python code block. You can use any flavor
         you please or the special flag "raw" which will be a code block
         without flavor. If you choose "markdown" there is no encapsulation.
+    remove_doctest_blanklines : bool, default True
+            If True, replaces "<BLANKLINE>" used for doctest with an empty string.
+            See https://docs.python.org/3.8/library/doctest.html#how-are-docstring-examples-recognized
 
     Examples
     --------
@@ -97,7 +100,8 @@ def render_md_from_obj_docstring(obj, obj_namespace, examples_md_flavor='python'
             continue
         converted = numpydoc_section_to_md_lines(doc,
                                                  section_name=section_name,
-                                                 examples_md_flavor=examples_md_flavor)
+                                                 examples_md_flavor=examples_md_flavor,
+                                                 remove_doctest_blanklines=remove_doctest_blanklines)
         lines.extend(converted)
     # assemble the lines
     md = '\n'.join(lines).strip()
@@ -138,6 +142,9 @@ def _render_placeholder_string(placeholder_string):
             to create a markdown Python code block. You can use any flavor
             you please or the special flag "raw" which will be a code block
             without flavor. If you choose "markdown" there is no encapsulation.
+        * _(optional)_ "remove_doctest_blanklines": If True (default), replaces "<BLANKLINE>"
+            used for doctest with an empty string.
+            See https://docs.python.org/3.8/library/doctest.html#how-are-docstring-examples-recognized
 
     Examples
     --------
@@ -149,7 +156,7 @@ def _render_placeholder_string(placeholder_string):
     # and it can be read as JSON
     parsed = json.loads(placeholder_string[1:-1])
     # check keys
-    allowed_keys = {'alias', 'obj', 'ex_md_flavor'}
+    allowed_keys = {'alias', 'obj', 'ex_md_flavor', 'remove_doctest_blanklines'}
     not_allowed_keys = set(parsed.keys()) - allowed_keys
     if not_allowed_keys:
         raise ValueError((f'Invalid keys used for placeholder string: {not_allowed_keys}\n'
@@ -161,8 +168,21 @@ def _render_placeholder_string(placeholder_string):
     obj = locate(parsed['obj'])
     # search for examples md flavor
     examples_md_flavor = parsed.get('ex_md_flavor','python')
+    # check if the user wants doctest blanklines removed
+    ## for JSON the user should write "true" instead of "True" but in case he forgets we can convert that
+    remove_doctest_blanklines = parsed.get('remove_doctest_blanklines', True)
+    if isinstance(remove_doctest_blanklines, str):
+        if remove_doctest_blanklines.lower() == 'true':
+            remove_doctest_blanklines = True
+        elif remove_doctest_blanklines.lower() == 'false':
+            remove_doctest_blanklines = False
+    ## at this point remove_doctest_blanklines must be a bool
+    if remove_doctest_blanklines not in (True, False):
+        raise ValueError('Argument remove_doctest_blanklines must be a boolean!')
+
     # convert to md
-    rendered = render_md_from_obj_docstring(obj, obj_namespace, examples_md_flavor=examples_md_flavor)
+    rendered = render_md_from_obj_docstring(obj, obj_namespace, examples_md_flavor=examples_md_flavor,
+                                            remove_doctest_blanklines=remove_doctest_blanklines)
     return rendered
 
 
@@ -222,14 +242,14 @@ def render_md_file(source, destination=None, allow_same_path=False):
     splitted = content.splitlines()
     rendered_lines = []
     
-    for line in splitted:
+    for ix, line in enumerate(splitted):
         line = line.rstrip('\n')
         # find strings like {{my_class,my_method,my_alias}}
         if line.startswith('{{') and line.endswith('}}'):
             try:
                 md = _render_placeholder_string(line)
             except Exception as e:
-                logger.error(f'Could not render this line: {line}', exc_info=e)
+                logger.error(f'Could not render line {ix}: "{line}" in file "{source}"', exc_info=e)
                 # add unrendered line
                 rendered_lines.append(line)
                 continue
