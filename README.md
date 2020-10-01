@@ -119,7 +119,7 @@ Constructing DataFrame from numpy ndarray:
 
 ### After
 
-**<span style="color:purple">pd.DataFrame</span>_(data=None, index: Union[Collection, NoneType] = None, columns: Union[Collection, NoneType] = None, dtype: Union[str, numpy.dtype, ForwardRef('ExtensionDtype'), NoneType] = None, copy: bool = False)_**
+**<span style="color:purple">pd.DataFrame</span>_(data=None, index: Union[Collection, NoneType] = None, columns: Union[Collection, NoneType] = None, dtype: Union[ForwardRef('ExtensionDtype'), str, numpy.dtype, Type[Union[str, float, int, complex, bool]], NoneType] = None, copy: bool = False)_**
 
 
 Two-dimensional, size-mutable, potentially heterogeneous tabular data.
@@ -150,9 +150,9 @@ pandas data structure.
 #### See Also
 * DataFrame.from_records : Constructor from tuples, also record arrays.
 * DataFrame.from_dict : From dicts of Series, arrays, or dicts.
-* read_csv
-* read_table
-* read_clipboard
+* read_csv : Read a comma-separated values (csv) file into DataFrame.
+* read_table : Read general delimited file into DataFrame.
+* read_clipboard : Read text from clipboard into DataFrame.
 
 #### Examples
 Constructing DataFrame from a dictionary.
