@@ -5,3 +5,7 @@ coverage:
   precision: 2
   round: down
   range: "85...100"
+
+ignore:
+  - "./npdoc_to_md/docs"
+
