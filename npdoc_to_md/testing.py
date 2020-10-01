@@ -129,6 +129,25 @@ def example_func3():
     pass
 
 
+# # Fourth example
+#
+# With a blankline in the examples
+
+def example_func4():
+    """
+    Function to test if we can successfully remove doctest blanklines.
+    See https://docs.python.org/3.8/library/doctest.html#how-are-docstring-examples-recognized
+
+    Examples
+    --------
+    >>> example_func4()
+    <BLANKLINE>
+    foo
+    """
+    print('')
+    print('foo')
+
+
 # # Classes
 
 class ExampleClass():

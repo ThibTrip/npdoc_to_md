@@ -22,6 +22,8 @@ JSON dictionnary decorated by {} with the following keys (see examples below):
     See https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet#code-and-syntax-highlighting
     If not provided outputs are encapsulated by ````python```` to create a markdown Python code block. You can use any flavor
     you please or the special flag "raw" which will be a code block without flavor. If you choose "markdown" there is no encapsulation.
+* <i>(optional)</i> "remove_doctest_blanklines": If True (default), replaces "<BLANKLINE>" used for doctest with an empty string.
+    See https://docs.python.org/3.8/library/doctest.html#how-are-docstring-examples-recognized
 
 ### Examples
 

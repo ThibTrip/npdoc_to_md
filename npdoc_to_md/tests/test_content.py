@@ -2,6 +2,7 @@
 from npdoc_to_md.testing import (example_func,
                                  example_func2,
                                  example_func3,
+                                 example_func4,
                                  ExampleClass)
 
 from npdoc_to_md import render_md_from_obj_docstring
@@ -136,3 +137,34 @@ ex = ExampleClass('john', 'doe')
 def test_rendering(func, func_name, expected_md):
     md = render_md_from_obj_docstring(func, func_name)
     assert md == expected_md
+
+
+# # Test blankline removal
+
+# +
+with_blankline = """**<span style="color:purple">example&#95;func4</span>_()_**
+
+
+Function to test if we can successfully remove doctest blanklines.
+See https://docs.python.org/3.8/library/doctest.html#how-are-docstring-examples-recognized
+
+
+#### Examples
+```python
+example_func4()
+```
+```
+<BLANKLINE>
+foo
+```"""
+
+without_blankline = '\n'.join('' if l == '<BLANKLINE>' else l for l in with_blankline.split('\n'))
+
+
+def test_doctest_blankline_present():
+    md = render_md_from_obj_docstring(example_func4, 'example_func4', remove_doctest_blanklines=False, examples_md_flavor='raw')
+    assert md == with_blankline
+
+def test_doctest_blankline_absent():
+    md = render_md_from_obj_docstring(example_func4, 'example_func4', remove_doctest_blanklines=True, examples_md_flavor='raw')
+    assert md == without_blankline
