@@ -1,4 +1,3 @@
-import os
 from npdoc_to_md import render_md_from_obj_docstring
 
 
