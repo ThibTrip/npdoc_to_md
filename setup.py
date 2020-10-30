@@ -24,7 +24,7 @@ setuptools.setup(
     author="Thibault Bétrémieux",
     author_email="thibault.betremieux@gmail.com",
     url = 'https://github.com/ThibTrip/npdoc_to_md',
-    download_url = 'https://github.com/ThibTrip/npdoc_to_md/archive/v0.3.tar.gz',
+    download_url = 'https://github.com/ThibTrip/npdoc_to_md/archive/v1.0.1.tar.gz',
     keywords = ['numpydoc','documentation', 'docstrings', 'python'],
     description=description,
     long_description=long_description,
