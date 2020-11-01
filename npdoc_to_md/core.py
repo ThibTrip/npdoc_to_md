@@ -8,18 +8,12 @@ from pydoc import locate
 from numpydoc.docscrape import (NumpyDocString,
                                 FunctionDoc,
                                 ClassDoc)
+from npdoc_to_md.exceptions import NonExistentObjectException
 from npdoc_to_md.helpers import numpydoc_section_to_md_lines
+from npdoc_to_md.logger import log
 
 # regex to remove self argument in methods or cls in classmethods
 RE_SELF_ARG = re.compile('(?<=\()(self|cls) *\,* *')
-
-# configure logger
-logging_format = ('%(asctime)s | %(levelname)s     '
-                  '| npdoc_to_md     | %(module)s:%(funcName)s:%(lineno)s '
-                  '- %(message)s')
-logging.basicConfig(format=logging_format, datefmt='%Y-%m-%d %H:%M:%S')
-logger = logging.getLogger('pangres')
-logger.setLevel(logging.INFO)
 
 
 # -
@@ -250,7 +244,7 @@ def render_md_file(source, destination=None, allow_same_path=False):
             try:
                 md = _render_placeholder_string(line)
             except Exception as e:
-                logger.error(f'Could not render line {ix}: "{line}" in file "{source}"', exc_info=e)
+                log(f'Could not render line {ix}: "{line}" in file "{source}"', msg_level='exception')
                 # add unrendered line
                 rendered_lines.append(line)
                 continue
