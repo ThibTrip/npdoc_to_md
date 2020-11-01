@@ -24,6 +24,13 @@ JSON dictionnary decorated by {} with the following keys (see examples below):
     you please or the special flag "raw" which will be a code block without flavor. If you choose "markdown" there is no encapsulation.
 * <i>(optional)</i> "remove_doctest_blanklines": If True (default), replaces "<BLANKLINE>" used for doctest with an empty string.
     See https://docs.python.org/3.8/library/doctest.html#how-are-docstring-examples-recognized
+    
+
+A placeholder must be at the beginning of a line and this line cannot contain anything else!
+    
+* Bad example: <code>* {{"obj":"somefunc"}}</code>
+* Good example: <code>{{"obj":"somefunc"}}</code>
+
 
 ### Examples
 

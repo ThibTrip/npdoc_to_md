@@ -25,16 +25,6 @@ def render_md_from_obj_docstring(obj, obj_namespace, examples_md_flavor='python'
     Converts the docstring of an object (e.g. function, class, method)
     to a pretty markdown string.
 
-    **IMPORTANT**
-
-    1. The docstring must be a valid pandas/numpy style docstring! See the following resources:
-       * https://pandas.pydata.org/pandas-docs/stable/development/contributing_docstring.html#docstring
-       * https://numpydoc.readthedocs.io/en/latest/format.html
-    2. Before any example in the docstring you can define the markdown flavor/language for its
-       output like this: {{LANGUAGE}} e.g. {{markdown}}, {{python}} or {{raw}} for no language
-       which creates a raw markdown code block.
-       When you do this, this overrides the parameter examples_md_flavor (see Parameters).
-
     Notes
     -----
     The parameter obj_namespace (e.g. pandas.DataFrame) would be optional
@@ -113,16 +103,6 @@ def _render_placeholder_string(placeholder_string):
     defined in a placeholder (see placeholder_string in Parameters)
     to a pretty markdown string.
 
-    **IMPORTANT**
-
-    1. The docstring must be a valid pandas/numpy style docstring! See the following resources:
-       * https://pandas.pydata.org/pandas-docs/stable/development/contributing_docstring.html#docstring
-       * https://numpydoc.readthedocs.io/en/latest/format.html
-    2. Before any example in the docstring you can define the markdown flavor/language for its
-       output like this: {{LANGUAGE}} e.g. {{markdown}}, {{python}} or {{raw}} for no language
-       which create a raw markdown code block.
-       When you do this, this overrides the key "ex_md_flavor" in the placeholder (see Parameters).
-
     Parameters
     ----------
     placeholder_string : str
@@ -190,20 +170,6 @@ def render_md_file(source, destination=None, allow_same_path=False):
     Renders a markdown file containing (or not) placeholders - see **docstring of
     npdoc_to_md.render_placeholder_string** !! - to automatically fetch and convert
     Python docstrings to pretty markdown.
-
-    **IMPORTANT**
-
-    1. The docstring must be a valid pandas/numpy style docstring! See the following resources:
-       * https://pandas.pydata.org/pandas-docs/stable/development/contributing_docstring.html#docstring
-       * https://numpydoc.readthedocs.io/en/latest/format.html
-    2. Before any example in the docstring you can define the markdown flavor/language for its
-       output like this: {{LANGUAGE}} e.g. {{markdown}}, {{python}} or {{raw}} for no language
-       which create a raw markdown code block.
-       When you do this, this overrides the key "ex_md_flavor" in placeholders (see section Parameters
-       in the docstring of the function npdoc_to_md.render_placeholder_string).
-    3. A placeholder must be at the beginning of a line and this line cannot contain anything else!
-        * Bad example: <code>* {{"obj":"somefunc"}} <- this is a cool function</code>
-        * Good example: <code>{{"obj":"somefunc"}}</code>
     
     Parameters
     ----------
