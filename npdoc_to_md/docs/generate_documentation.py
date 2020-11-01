@@ -11,10 +11,11 @@ methods or classes are pulled and converted to pretty markdown).
 It takes a single argument which is the path to npdoc_to_md's wiki which you must have
 cloned on your computer (git clone https://github.com/ThibTrip/npdoc_to_md.wiki.git).
 
-To use the script, replace "WIKI_FOLDER_PATH" with the path to the cloned wiki folder and assuming you are in the same folder as
-the script you can run this command:
+To use the script, replace "NPDOC_TO_MD_PATH" with the path to the cloned repo of npdoc_to_md
+and replace "WIKI_FOLDER_PATH" with the path to the cloned wiki folder. Then, assuming you are
+in the same folder as the script you can run this command:
 
-$ python generate_documentation.py WIKI_FOLDER_PATH
+$ python generate_documentation.py NPDOC_TO_MD_PATH WIKI_FOLDER_PATH
 """
 
 

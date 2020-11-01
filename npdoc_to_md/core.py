@@ -165,6 +165,7 @@ def _render_placeholder_string(placeholder_string):
 
 # # Render from markdown string
 
+# +
 def render_md_string(text):
     r"""
     Renders a markdown string containing (or not) placeholders - see **docstring of
@@ -180,10 +181,11 @@ def render_md_string(text):
     --------
     >>> import pandas
     >>> from npdoc_to_md import render_md_string
-    >>> 
-    >>> md = \"""pandas is a very cool library!\n\n # Docstring of pd.Series.to_list\n\n{{"obj":"pandas.Series.to_list", "alias":"pd.Series.to_list"}}\""" # doctest: +SKIP
+    >>> md = ('pandas is a very cool library!\n\n # Docstring of pd.Series.to_list\n\n'
+    ...       '{{"obj":"pandas.Series.to_list", "alias":"pd.Series.to_list", "ex_md_flavor":"markdown"}}') # doctest: +SKIP
     >>> md_rendered = render_md_string(md) # doctest: +SKIP
     >>> print(md_rendered) # doctest: +SKIP
+
     pandas is a very cool library!
 
      # Docstring of pd.Series.to_list
@@ -231,9 +233,10 @@ def render_md_string(text):
 def render_md_file(source, destination=None, allow_same_path=False):
     """
     Renders a markdown file containing (or not) placeholders - see **docstring of
-    npdoc_to_md.render_placeholder_string** !! - to automatically fetch and convert
-    Python docstrings to pretty markdown.
-    
+    npdoc_to_md.render_placeholder_string** or npdoc_to_md's GitHub wiki page
+    "Render from object" - to automatically fetch and convert Python docstrings
+    to pretty markdown.
+
     Parameters
     ----------
     source : str
