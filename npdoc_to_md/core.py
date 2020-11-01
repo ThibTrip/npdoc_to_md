@@ -161,6 +161,8 @@ def _render_placeholder_string(placeholder_string):
     obj_namespace = parsed['alias'] if 'alias' in parsed else parsed['obj']
     # import object or method
     obj = locate(parsed['obj'])
+    if not obj:
+        raise NonExistentObjectException(f'Could not locate object "{parsed["obj"]}"')
     # search for examples md flavor
     examples_md_flavor = parsed.get('ex_md_flavor','python')
     # check if the user wants doctest blanklines removed

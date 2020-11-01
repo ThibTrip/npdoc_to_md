@@ -1,0 +1,2 @@
+class NonExistentObjectException(Exception):
+    pass
