@@ -163,7 +163,70 @@ def _render_placeholder_string(placeholder_string):
     return rendered
 
 
-# # Parse from markown file
+# # Render from markdown string
+
+def render_md_string(text):
+    r"""
+    Renders a markdown string containing (or not) placeholders - see **docstring of
+    npdoc_to_md.render_placeholder_string** !! - to automatically fetch and convert
+    Python docstrings to pretty markdown.
+
+    Parameters
+    ----------
+    text : str
+        Markdown string
+    
+    Examples
+    --------
+    >>> import pandas
+    >>> from npdoc_to_md import render_md_string
+    >>> 
+    >>> md = \"""pandas is a very cool library!\n\n # Docstring of pd.Series.to_list\n\n{{"obj":"pandas.Series.to_list", "alias":"pd.Series.to_list"}}\""" # doctest: +SKIP
+    >>> md_rendered = render_md_string(md) # doctest: +SKIP
+    >>> print(md_rendered) # doctest: +SKIP
+    pandas is a very cool library!
+
+     # Docstring of pd.Series.to_list
+
+    **<span style="color:purple">pd.Series.to&#95;list</span>_()_**
+
+
+    Return a list of the values.
+
+
+    These are each a scalar type, which is a Python scalar
+    (for str, int, float) or a pandas scalar
+    (for Timestamp/Timedelta/Interval/Period)
+
+    #### Returns
+    <b><i>list</i></b> 
+
+    #### See Also
+    * numpy.ndarray.tolist : Return the array as an a.ndim-levels deep
+    nested list of Python scalars.
+    """
+    splitted = text.splitlines()
+    rendered_lines = []
+    
+    for ix, line in enumerate(splitted):
+        line = line.rstrip('\n')
+        # find strings like {{my_class,my_method,my_alias}}
+        if line.startswith('{{') and line.endswith('}}'):
+            try:
+                md = _render_placeholder_string(line)
+            except Exception as e:
+                log(f'Could not render line {ix}: "{line}"', msg_level='exception')
+                # add unrendered line
+                rendered_lines.append(line)
+                continue
+            rendered_lines.append(md)
+        else:
+            rendered_lines.append(line)
+    new_text = '\n'.join(rendered_lines)
+    return new_text
+
+
+# # Render from markdown file
 
 def render_md_file(source, destination=None, allow_same_path=False):
     """
@@ -200,30 +263,18 @@ def render_md_file(source, destination=None, allow_same_path=False):
     >>> 
     >>> md = render_md_file(source, destination) # doctest: +SKIP
     """
+    # attempt to read the file
     with open(source, mode='r', encoding='utf-8') as fh:
-        content = fh.read()
-    splitted = content.splitlines()
-    rendered_lines = []
-    
-    for ix, line in enumerate(splitted):
-        line = line.rstrip('\n')
-        # find strings like {{my_class,my_method,my_alias}}
-        if line.startswith('{{') and line.endswith('}}'):
-            try:
-                md = _render_placeholder_string(line)
-            except Exception as e:
-                log(f'Could not render line {ix}: "{line}" in file "{source}"', msg_level='exception')
-                # add unrendered line
-                rendered_lines.append(line)
-                continue
-            rendered_lines.append(md)
-        else:
-            rendered_lines.append(line)
-    new_content = '\n'.join(rendered_lines)
+        text = fh.read()
+
+    # render
+    new_text = render_md_string(text)
+
+    # save
     if destination is not None:
         if (pathlib.Path(source) == pathlib.Path(destination)) and not allow_same_path:
             raise ValueError(('source cannot be the same as destination! '
                               'This is to avoid accidental overwriting of your docs.'))
         with open(destination, mode='w', encoding='utf-8') as fh:
-            fh.write(new_content)
-    return new_content
+            fh.write(new_text)
+    return new_text
