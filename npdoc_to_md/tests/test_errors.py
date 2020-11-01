@@ -9,5 +9,5 @@ def test_error_bad_placeholder(caplog):
     with tempfile.NamedTemporaryFile(suffix='.md', mode='w+') as tmp:
         tmp.write('{{"obj":"not_a_package.monkey"}}')
         tmp.seek(0)
-        render_md_file(tmp.name, destination='test')
+        render_md_file(source=tmp.name, destination=None)
         assert 'Could not render line' in caplog.text
