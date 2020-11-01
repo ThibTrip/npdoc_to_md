@@ -267,6 +267,14 @@ def render_md_file(source, destination=None, allow_same_path=False):
     with open(source, mode='r', encoding='utf-8') as fh:
         text = fh.read()
 
+    # log
+    log_msg = f'Rendering file "{source}" '
+    if destination:
+        log_msg += f'to "{destination}"'
+    else:
+        log_msg += 'to a string'
+    log(log_msg, msg_level='info')
+
     # render
     new_text = render_md_string(text)
 
