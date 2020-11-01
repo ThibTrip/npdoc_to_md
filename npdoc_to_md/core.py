@@ -13,7 +13,7 @@ from npdoc_to_md.helpers import numpydoc_section_to_md_lines
 from npdoc_to_md.logger import log
 
 # regex to remove self argument in methods or cls in classmethods
-RE_SELF_ARG = re.compile('(?<=\()(self|cls) *\,* *')
+RE_SELF_ARG = re.compile(r'(?<=\()(self|cls) *\,* *')
 
 
 # -
@@ -21,7 +21,7 @@ RE_SELF_ARG = re.compile('(?<=\()(self|cls) *\,* *')
 # # Parse from object
 
 def render_md_from_obj_docstring(obj, obj_namespace, examples_md_flavor='python', remove_doctest_blanklines=True):
-    """
+    r"""
     Converts the docstring of an object (e.g. function, class, method)
     to a pretty markdown string.
 
@@ -108,7 +108,7 @@ def render_md_from_obj_docstring(obj, obj_namespace, examples_md_flavor='python'
 # e.g. <code>{{"obj":"npdoc_to_md.testing.example_func"}}</code>
 
 def _render_placeholder_string(placeholder_string):
-    """
+    r"""
     Converts the docstring of a Python function, class or method
     defined in a placeholder (see placeholder_string in Parameters)
     to a pretty markdown string.
