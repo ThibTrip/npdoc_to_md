@@ -1,5 +1,6 @@
 include README.md
 include requirements.txt
+include logo.png
 include npdoc_to_md/wiki/Home.md
 include npdoc_to_md/wiki/Logging.md
 include npdoc_to_md/wiki/Render file.npmd
