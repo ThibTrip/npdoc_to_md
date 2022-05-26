@@ -1,8 +1,8 @@
 include README.md
 include requirements.txt
-include npdoc_to_md/docs/Home.md
-include npdoc_to_md/docs/List markdown files in dir.md
-include npdoc_to_md/docs/Preview.md
-include npdoc_to_md/docs/README.md
-include npdoc_to_md/docs/Render file.md
-include npdoc_to_md/docs/Render from object.md
+include npdoc_to_md/wiki/Home.md
+include npdoc_to_md/wiki/Logging.md
+include npdoc_to_md/wiki/Render file.npmd
+include npdoc_to_md/wiki/Render folder.npmd
+include npdoc_to_md/wiki/Render object docstring.npmd
+include npdoc_to_md/wiki/Render string.npmd

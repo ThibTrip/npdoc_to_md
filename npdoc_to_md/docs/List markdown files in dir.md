@@ -1,1 +1,0 @@
-{{"obj":"npdoc_to_md.get_markdown_files_in_dir"}}
