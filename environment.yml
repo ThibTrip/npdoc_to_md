@@ -1,6 +1,6 @@
 name: npdoc_to_md-dev
 dependencies:
-  - pandas  # for tests (pandas uses numpy's docstring style)
+  - pandas  # for tests
   - pytest
   - pytest-cov
   - tabulate
