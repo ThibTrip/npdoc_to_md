@@ -1,0 +1,37 @@
+name: Main workflow
+on: [push]
+jobs:
+
+  test:
+    name: Ex1 (${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: ["ubuntu-latest"]
+        python-version: ["3.10"]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: conda-incubator/setup-miniconda@v2.1.1
+        with:
+          auto-update-conda: true
+          python-version: ${{ matrix.python-version }}
+          environment-file: environment.yml
+          activate-environment: npdoc_to_md-dev
+      - name: Conda info
+        shell: bash -l {0}
+        run: conda info
+      - name: Test with pytest
+        shell: bash -l {0}
+        run: |
+          pip install .
+          pytest -sv npdoc_to_md --cov=npdoc_to_md --doctest-modules
+          # check that we can generate the wiki without problems
+          # (we will do that manually though because we don't want to change it for every commit)
+          npdoc_to_md render-folder -source ./docs -destination ./docs
+      - name: Codecov
+        # You may pin to the exact commit or the version.
+        # uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378
+        uses: codecov/codecov-action@v3.1.0
+        with:
+          fail_ci_if_error: true
