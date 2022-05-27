@@ -3,7 +3,11 @@ include requirements.txt
 include logo.png
 include npdoc_to_md/wiki/Home.md
 include npdoc_to_md/wiki/Logging.md
-include npdoc_to_md/wiki/Render file.npmd
-include npdoc_to_md/wiki/Render folder.npmd
-include npdoc_to_md/wiki/Render object docstring.npmd
-include npdoc_to_md/wiki/Render string.npmd
+include npdoc_to_md/wiki/Render file.md
+include npdoc_to_md/wiki/Render folder.md
+include npdoc_to_md/wiki/Render object docstring.md
+include npdoc_to_md/wiki/Render string.md
+include npdoc_to_md/wiki/templates/Render file.npmd
+include npdoc_to_md/wiki/templates/Render folder.npmd
+include npdoc_to_md/wiki/templates/Render object docstring.npmd
+include npdoc_to_md/wiki/templates/Render string.npmd

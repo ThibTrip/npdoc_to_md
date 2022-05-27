@@ -1,0 +1,1 @@
+npdoc_to_md render-folder -source ./templates -destination . --ignore-errors
