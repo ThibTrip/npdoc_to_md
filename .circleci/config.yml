@@ -16,7 +16,7 @@ jobs:
           python3 -m venv venv
           . venv/bin/activate
           pip install -r requirements.txt
-          pip install pandas tabulate codecov coverage pytest pytest-cov
+          pip install pandas tabulate codecov coverage pytest pytest-cov fire
     - save_cache:
         paths:
         - ./venv
