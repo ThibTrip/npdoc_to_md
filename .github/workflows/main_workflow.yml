@@ -28,7 +28,7 @@ jobs:
           pytest -sv npdoc_to_md --cov=npdoc_to_md --doctest-modules
           # check that we can generate the wiki without problems
           # (we will do that manually though because we don't want to change it for every commit)
-          npdoc_to_md render-folder -source ./docs -destination ./docs
+          npdoc_to_md render-folder -source ./wiki -destination ./wiki
       - name: Codecov
         # You may pin to the exact commit or the version.
         # uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378
