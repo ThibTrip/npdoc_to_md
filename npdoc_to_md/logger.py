@@ -9,19 +9,24 @@ https://stackoverflow.com/a/56944256/10551772
 """
 import logging
 import os
-from typing import NamedTuple
+from dataclasses import dataclass
 
 
 # # Helpers
 
 # +
-# NamedTuple is an alternative for dataclasses in Python <= 3.6
-class LoggingLevel(NamedTuple):
+@dataclass(frozen=True)
+class LoggingLevel:
     method_name:str
     color:str
 
 
-reset_color = "\x1b[0m"  # string for resetting color, needed at each line
+# string for resetting color that we will need to use for every log line
+# (in the formatting as we do not want to change the message)
+reset_color = "\x1b[0m"
+
+
+# mapping/switch {level:LoggingLevel}
 loggers = {}
 log_method_switch = {logging.CRITICAL:LoggingLevel(method_name='critical', color="\x1b[31;1m"),  # bold red
                      logging.ERROR:LoggingLevel(method_name='error', color="\x1b[31;20m"),  # red
@@ -34,9 +39,10 @@ log_method_switch = {logging.CRITICAL:LoggingLevel(method_name='critical', color
 
 # # Main function
 
-def log(text:str, name:str='npdoc_to_md', level:int=logging.INFO, exc_info:bool=False):
+def log(text:str, name:str='npdoc_to_md', level:int=logging.INFO, exc_info:bool=False) -> None:
     """
     Logs given text to stderr (default of the logging library).
+
     Parameters
     ----------
     text
@@ -47,15 +53,12 @@ def log(text:str, name:str='npdoc_to_md', level:int=logging.INFO, exc_info:bool=
         See logging levels
         https://docs.python.org/3/library/logging.html#logging-levels
     exc_info
-        Whether to include exceptions info (for exceptions)
+        Whether to include exceptions info
 
     Notes
     -----
     This is heavily inspired from:
     https://github.com/SergeyPirogov/webdriver_manager/blob/master/webdriver_manager/logger.py
-
-    I wanted to do it with two functions as well (_init_handler and log) but could not get
-    it to work somehow
 
     Examples
     --------
