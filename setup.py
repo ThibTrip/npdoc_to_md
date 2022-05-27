@@ -20,12 +20,12 @@ with open(os.path.join(here, "requirements.txt"),"r") as f:
 
 setuptools.setup(
     name="npdoc_to_md",
-    version="2.0",
+    version="2.0.1",
     license='The Unlicense',
     author="Thibault Bétrémieux",
     author_email="thibault.betremieux@gmail.com",
     url='https://github.com/ThibTrip/npdoc_to_md',
-    download_url='https://github.com/ThibTrip/npdoc_to_md/archive/v2.0.tar.gz',
+    download_url='https://github.com/ThibTrip/npdoc_to_md/archive/v2.0.1.tar.gz',
     keywords=['numpydoc','documentation', 'docstrings', 'python', 'markdown'],
     entry_points={'console_scripts': ['npdoc-to-md=npdoc_to_md.core:start_cli',
                                       # aliases (note that python-fire, the library
