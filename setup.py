@@ -27,6 +27,13 @@ setuptools.setup(
     url='https://github.com/ThibTrip/npdoc_to_md',
     download_url='https://github.com/ThibTrip/npdoc_to_md/archive/v2.0.tar.gz',
     keywords=['numpydoc','documentation', 'docstrings', 'python', 'markdown'],
+    entry_points={'console_scripts': ['npdoc-to-md=npdoc_to_md.core:start_cli',
+                                      # aliases (note that python-fire, the library
+                                      # we use for the CLI also allows mixing "-"
+                                      # and "_" in the same argument)
+                                      'npdoc_to_md=npdoc_to_md.core:start_cli',
+                                      'npdoc-to_md=npdoc_to_md.core:start_cli',
+                                      'npdoc_to-md=npdoc_to_md.core:start_cli']},
     description=description,
     long_description=long_description,
     long_description_content_type="text/markdown",
