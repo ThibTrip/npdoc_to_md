@@ -73,9 +73,7 @@ below will be converted to a docstring in markdown:
 """
 md = render_string(string=text)
 ```
-```python
 
-```
 ```python
 # demonstrating "ignore_errors": this raises no error even though we are referring to a non existent object
 md = render_string(string='{{"obj":"some_object_that_does_not_exist"}}', ignore_errors=True)

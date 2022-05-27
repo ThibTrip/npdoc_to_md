@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/ThibTrip/npdoc_to_md/tree/master.svg?style=svg&circle-token=e33f9d9e628fde342e9acd4c43c2c939780bf1f0)](https://circleci.com/gh/ThibTrip/npdoc_to_md/tree/master)
+[![example workflow](https://github.com/ThibTrip/npdoc_to_md/actions/workflows/main_workflow.yml/badge.svg)](https://github.com/ThibTrip/npdoc_to_md/actions/workflows/main_workflow.yml)
 [![codecov](https://codecov.io/gh/ThibTrip/npdoc_to_md/branch/master/graph/badge.svg)](https://codecov.io/gh/ThibTrip/npdoc_to_md)
 [![PyPI version](https://img.shields.io/pypi/v/npdoc_to_md)](https://img.shields.io/pypi/v/npdoc_to_md)
 [![Documentation](https://img.shields.io/badge/wiki-documentation-forestgreen)](https://github.com/ThibTrip/npdoc_to_md/wiki)
