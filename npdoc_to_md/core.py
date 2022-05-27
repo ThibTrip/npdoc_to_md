@@ -235,7 +235,7 @@ def _render_placeholder_no_err(placeholder:Placeholder) -> str:
 # ## Function to render from text
 
 def render_string(string:str, ignore_errors:bool=False) -> str:
-    '''
+    r'''
     Returns a markdown string where placeholders defined in this library have
     been replaced with the corresponding docstrings rendered in Markdown.
 
