@@ -25,7 +25,9 @@ jobs:
         shell: bash -l {0}
         run: |
           pip install .
+          pip install codecov
           pytest -sv npdoc_to_md --cov=npdoc_to_md --doctest-modules
+          codecov
       - name: Codecov
         # You may pin to the exact commit or the version.
         # uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378
