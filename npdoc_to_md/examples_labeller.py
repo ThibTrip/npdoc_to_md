@@ -172,7 +172,8 @@ class ExamplesLabeller:
             follows_output = previous_label is ExampleLineType.OUTPUT
             is_empty_line = line.strip() == ''
             previous_line_empty = previous_line is not None and previous_line.strip() == ''
-            is_example_output = (follows_input and not is_input) or (follows_output and not is_empty_line and not previous_line_empty)
+            is_example_output = ((follows_input and not is_input and not is_empty_line) or
+                                 (follows_output and not is_empty_line and not previous_line_empty))
             if is_example_output:
                 labelled_lines.append(ExampleLine(global_index=ix, line=line, line_type=ExampleLineType.OUTPUT))
             else:
@@ -196,11 +197,16 @@ class ExamplesLabeller:
                 blocks_start.append(ix)
                 continue
 
+            # easy case of examples separated by a line break
+            previous = labels[ix - 1]
+            if previous.line_type is ExampleLineType.INPUT and example_line.line.strip() == '':
+                blocks_start.append(ix)
+                continue
+
             # for the other examples wait for an output line (could also be an empty
             # line separating the examples, I have not made a distinction for that)
             # before
             # declaring a new block
-            previous = labels[ix - 1]
             if previous.line_type is not ExampleLineType.OUTPUT:
                 continue
             if example_line.line_type in (ExampleLineType.INPUT, ExampleLineType.TEXT):
