@@ -5,7 +5,7 @@
 [![Made withJupyter](https://img.shields.io/badge/Made%20with-Jupyter-orange?logo=Jupyter)](https://jupyter.org/try)
 
 # npdoc_to_md
-![logo](logo.png)
+![logo](https://raw.githubusercontent.com/ThibTrip/npdoc_to_md/v2.0/logo.png)
 
 _Thanks to [freesvg.org](https://freesvg.org/) for the logo assets_
 
