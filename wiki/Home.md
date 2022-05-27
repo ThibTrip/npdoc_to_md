@@ -7,7 +7,8 @@ npdoc_to_md converts the docstrings of Python objects into pretty markdown with 
 * [render_file](https://github.com/ThibTrip/npdoc_to_md/wiki/Render-file): extracts and formats docstrings via a **Markdown/template file with placeholders** (see documentation on placeholders below). Optionally saves converted text to a file
 * [render_folder](https://github.com/ThibTrip/npdoc_to_md/wiki/Render-folder): same as `render_file` for a whole folder. Optionally saves to a destination folder, reproducing the structure of the source folder.
   File names are matched by a pattern (by default files with extensions ".md" or ".npmd" case insenstive)
-* [logging](https://github.com/ThibTrip/npdoc_to_md/wiki/Logging): for configuring logging
+
+See also page [logging](https://github.com/ThibTrip/npdoc_to_md/wiki/Logging) for configuring the logging level.
 
 In any case, the docstrings must follow the numpydoc style! See [numpydoc](https://numpydoc.readthedocs.io/en/latest/format.html) or [pandas docstring guide](https://pandas.pydata.org/docs/development/contributing_docstring.html)
 
@@ -38,7 +39,7 @@ Here is an example of a placeholder (see the description of the parameters for t
 
   **IMPORTANT**: [placeholders written directly in examples](#2-Placeholders-in-examples-for-output-languages) override this parameter!
 
-  You can use any lang supported by markdown (python, markdown, html, ...) or one of the following
+  You can use any language supported by markdown (python, markdown, html, ...) or one of the following
   special flags:
   * `raw`: a raw code block (no code highlighting)
   * **`markdown_rendered`**: does not make a code block, renders output (e.g. a table) in markdown
@@ -71,9 +72,9 @@ Here is an example of a placeholder (see the description of the parameters for t
   we will also render the docstrings of given members.
 
   We use a **special syntax** for indicating which members to document:
-  * private$: flag that indicates private members (start with a single "_")
-  * dunder$: flag that indicates "dunder" members, usually system method such as `__setattr__` (start with two or more "_")
-  * public$: any member that does not fit under `private$` and `dunder$`
+  * `private$`: flag that indicates private members (start with a single "_")
+  * `dunder$`: flag that indicates "dunder" members, usually system method such as `__setattr__` (starts with two or more "_")
+  * `public$`: any member that does not fit under `private$` and `dunder$`
   * `+member` or `member`: member to include
   * `-member`: member to exlude
 
