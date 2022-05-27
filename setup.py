@@ -1,9 +1,10 @@
+# -*- coding: utf-8 -*-
 import setuptools
 import os
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-description = 'Easy conversion of Python docstrings in numpy style to markdown! Includes a Markdown renderer.'
+description = 'Automatic documentation tool using Markdown and Python docstrings written with the numpydoc style'
 
 # Import the README and use it as the long-description.
 # Note: this will only work if 'README.md' is present in your MANIFEST.in file!
@@ -20,22 +21,32 @@ with open(os.path.join(here, "requirements.txt"),"r") as f:
 setuptools.setup(
     name="npdoc_to_md",
     version="1.1",
-    license = 'The Unlicense',
+    license='The Unlicense',
     author="Thibault Bétrémieux",
     author_email="thibault.betremieux@gmail.com",
-    url = 'https://github.com/ThibTrip/npdoc_to_md',
-    download_url = 'https://github.com/ThibTrip/npdoc_to_md/archive/v1.1.tar.gz',
-    keywords = ['numpydoc','documentation', 'docstrings', 'python'],
+    url='https://github.com/ThibTrip/npdoc_to_md',
+    download_url='https://github.com/ThibTrip/npdoc_to_md/archive/v2.0.tar.gz',
+    keywords=['numpydoc','documentation', 'docstrings', 'python', 'markdown'],
+    entry_points={'console_scripts': ['npdoc-to-md=npdoc_to_md.core:start_cli',
+                                      # aliases (note that python-fire, the library
+                                      # we use for the CLI also allows mixing "-"
+                                      # and "_" in the same argument)
+                                      'npdoc_to_md=npdoc_to_md.core:start_cli',
+                                      'npdoc-to_md=npdoc_to_md.core:start_cli',
+                                      'npdoc_to-md=npdoc_to_md.core:start_cli']},
     description=description,
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
-    install_requires= requirements,
+    include_package_data=True,
+    install_requires=requirements,
     classifiers=["Development Status :: 5 - Production/Stable",
                  "Programming Language :: Python :: 3",
                  "Programming Language :: Python :: 3.6",
                  "Programming Language :: Python :: 3.7",
                  "Programming Language :: Python :: 3.8",
+                 "Programming Language :: Python :: 3.9",
+                 "Programming Language :: Python :: 3.10",
                  "License :: Public Domain",
                  "Intended Audience :: Developers",
                  "Operating System :: OS Independent"])

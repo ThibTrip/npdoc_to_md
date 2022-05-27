@@ -1,6 +1,12 @@
 name: npdoc_to_md-dev
 dependencies:
-  - pandas
+  - pandas  # for tests
   - pytest
   - pytest-cov
   - tabulate
+  - ipykernel  # for using the env in Jupyter
+  - IPython  # for testing Markdown in Jupyter (interactive testing)
+  - pip
+  - pip:
+      - plumbum  # for tests to run commands
+      - fire  # for using the CLI

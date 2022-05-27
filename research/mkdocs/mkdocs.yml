@@ -1,0 +1,20 @@
+theme:
+  name: "mkdocs"
+
+site_name: "npdoc_to_md"
+site_description: "Trying out mkdocs"
+site_author: "Thibault Betremieux"
+repo_url: https://github.com/ThibTrip/npdoc_to_md
+repo_name: "GitHub"
+
+nav:
+  - index.md
+  - "API": API.md
+
+plugins:
+- search
+- mkdocstrings:
+    handlers:
+      python:
+        selection:
+          show_if_no_docstring: true

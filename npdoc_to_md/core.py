@@ -1,291 +1,570 @@
 # +
-import inspect
+"""
+Contains all objects that will be directly exposed to the users of the library
+e.g. `render_obj_docstring`
+"""
+from functools import wraps
 import logging
 import re
-import json
-import pathlib
-from pydoc import locate
-from numpydoc.docscrape import (NumpyDocString,
-                                FunctionDoc,
-                                ClassDoc)
-from npdoc_to_md.exceptions import NonExistentObjectException
-from npdoc_to_md.helpers import numpydoc_section_to_md_lines
-from npdoc_to_md.logger import log
+import sys
+from dataclasses import dataclass, asdict
+from pathlib import Path
+from typing import List, Optional, Union
 
-# regex to remove self argument in methods or cls in classmethods
-RE_SELF_ARG = re.compile(r'(?<=\()(self|cls) *\,* *')
+# local imports
+from npdoc_to_md.helpers import FileOperations, Patterns
+from npdoc_to_md.logger import log
+from npdoc_to_md.parsers import parse_and_render
+from npdoc_to_md.placeholder import Config, Placeholder
+
+
+# -
+# # Local helpers
+
+# +
+@dataclass(frozen=True)
+class RenderedFile:
+    """
+    Represents a template file that has been converted by the npdoc_to_md library.
+
+    The attributes listed below are also the parameters for making an instance.
+    All parameters are mandatory.
+
+    Note that for the attributes "_" and "-" are interchangeable (e.g. "original_text"
+    and "original-text" will both work). This was made to simplify the CLI usage.
+
+    Attributes
+    ----------
+    source
+        Filepath to the template
+    destination
+        Filepath to the rendered template or None if the user did
+        not wish to save the result to a file
+    original_text
+        Text of the template file
+    rendered_text
+        Text obtained after rendering the template file (after a function
+        from npdoc_to_md was used)
+    """
+    source:str
+    destination:Union[str, None]
+    original_text:str
+    rendered_text:str
+
+    def __getattr__(self, attr:str):
+        """
+        We overwrite __getattr__ to allow aliases such as "original-text" for the CLI.
+        """
+        return self.__getattribute__(attr.replace('-', '_'))
+
+    def __repr__(self):
+        return (f'source: {self.source}\n'
+                f'destination: {self.destination}\n'
+                f'original_text: see attribute "original_text" (hidden to avoid cluttering the output)\n'
+                f'rendered_text:\n{self.rendered_text}')
+
+
+@dataclass(frozen=True)
+class RenderedFileCLI(RenderedFile):
+    """
+    Same as class npdoc_to_md.RenderedFile (see its docstring)
+    where the string form (str(instance)) has been changed for the CLI.
+    Indeed, the string form will give the same result as the repr
+    (repr(instance)).
+    """
+
+    def __str__(self):
+        return super().__repr__()
+
+    @classmethod
+    def _from_rendered_file(cls, obj:RenderedFile):
+        assert isinstance(obj, RenderedFile)
+        return cls(**asdict(obj))
+
+
+class RenderedFilesCLI(list):
+    """
+    Container for multiple instances of RenderedFileCLI.
+    Behaves like a list but the string form (str(instance)) has been
+    changed for the CLI.
+
+    Examples
+    --------
+    >>> data = [RenderedFileCLI(source='test.md', destination='test.md', original_text='foo', rendered_text='foo')]
+    >>> rfc = RenderedFilesCLI(data)
+    >>> rfc
+    [RenderedFileCLI(source='test.md', destination='test.md', original_text='foo', rendered_text='foo')]
+    >>> len(rfc)
+    1
+    >>> rfc[0]
+    RenderedFileCLI(source='test.md', destination='test.md', original_text='foo', rendered_text='foo')
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for obj in self:
+            assert isinstance(obj, RenderedFileCLI)
+
+    def __str__(self):  # pragma: no cover
+        strings = []
+        nb_files = len(self)
+        for ix, f in enumerate(self):
+            # make a separator so we can distinguish files more easely
+            begin = '\n\n' if ix != 0 else ''
+            strings.append(f'{begin}{"$"*50} FILE {ix + 1}/{nb_files} {"$"*50}\n')
+            strings.append(f.__str__())
+        return ''.join(strings)
 
 
 # -
 
-# # Parse from object
+# # Render using Python objects
 
-def render_md_from_obj_docstring(obj, obj_namespace, examples_md_flavor='python', remove_doctest_blanklines=True):
-    r"""
-    Converts the docstring of an object (e.g. function, class, method)
+# IMPORTANT! further down the line (in other modules) `obj` will be referred to as `obj_namespace`
+# and `obj` will be the actual Python object at given importable path
+def render_obj_docstring(obj:str,
+                         alias:Optional[str]=Config.get_default('alias'),
+                         examples_md_lang:str=Config.get_default('examples_md_lang'),
+                         remove_doctest_blanklines:bool=Config.get_default('remove_doctest_blanklines'),
+                         remove_doctest_skip:bool=Config.get_default('remove_doctest_skip'),
+                         md_section_level:int=Config.get_default('md_section_level'),
+                         ignore_custom_section_warning:bool=Config.get_default('ignore_custom_section_warning'),
+                         members:Optional[List[str]]=None) -> str:
+    """
+    Converts the docstring of an object (e.g. function, class, method, module, ...)
     to a pretty markdown string.
 
-    Notes
-    -----
-    The parameter obj_namespace (e.g. pandas.DataFrame) would be optional
-    if I was able to retrieve it automatically from the parameter obj but
-    I am not sure this is always possible.
+    It uses the same parameters as the ones for placeholders described
+    in the wiki of the library.
+    See wiki folder at the root of the repo or https://github.com/ThibTrip/npdoc_to_md/wiki
 
-    Parameters
-    ----------
-    obj : class, function, method
-    obj_namespace : str
-        Function namespace that should be used for the markdown.
-        You can also use your own aliases. For instance
-        pd.DataFrame instead of pandas.DataFrame.
-    examples_md_flavor : str
-        In which language/flavor to render example outputs.
-        See https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet#code-and-syntax-highlighting
-        By default example outputs are encapsulated by \```python\```
-        to create a markdown Python code block. You can use any flavor
-        you please or the special flag "raw" which will be a code block
-        without flavor. If you choose "markdown" there is no encapsulation.
-    remove_doctest_blanklines : bool, default True
-            If True, replaces "<BLANKLINE>" used for doctest with an empty string.
-            See https://docs.python.org/3.8/library/doctest.html#how-are-docstring-examples-recognized
+    CLI Examples
+    ------------
+    Note that "-" and "_" are interchangeable
+
+    ```
+    $ npdoc-to-md render-obj-docstring -obj "datetime.datetime" --alias "datetime" --examples-md-lang "raw" --md-section-level 3 --remove-doctest-skip --remove-doctest-blanklines
+
+    $ npdoc-to-md render-obj-docstring -obj "pandas" --examples-md-lang "raw" --members "['DataFrame']"
+
+    $ npdoc-to-md render-obj-docstring -obj "pandas.DataFrame" --alias "pd.DataFrame" --examples-md-lang "raw" --members "['public$', '+__dict__', '-to_dict']"
+    ```
 
     Examples
     --------
-    >>> from pandas import Series
-    >>> from npdoc_to_md import render_md_from_obj_docstring
-    >>> 
-    >>> md = render_md_from_obj_docstring(obj=Series, obj_namespace="pd.Series")
+    >>> from npdoc_to_md import render_obj_docstring
+    >>>
+    >>> md = render_obj_docstring(obj="npdoc_to_md.testing.now_utc",
+    ...                           alias="now_utc",
+    ...                           examples_md_lang='raw',
+    ...                           remove_doctest_skip=True,
+    ...                           remove_doctest_blanklines=True,
+    ...                           md_section_level=3)
     """
-    # escape "_" (use HTML code as in some situations \_ may be displayed instead of _)
-    obj_namespace = obj_namespace.replace('_', '&#95;')
-    # don't get the signature using numpydoc but instead use inspect and modify
-    # the object name (this is useful if we use an alias e.g.
-    # pd.DataFrame instead of pandas.DataFrame)
-    obj_sig = str(inspect.signature(obj))
-    # remove self argument
-    obj_sig = RE_SELF_ARG.sub('', obj_sig)
-    obj_sig = f"""**<span style="color:purple">{obj_namespace}</span>_{obj_sig}_**\n\n"""
-    # parse the object docstring using classes from numpydoc.docscrape
-    if inspect.isclass(obj):
-        doc = ClassDoc(obj)
-    elif inspect.isfunction(obj) or inspect.ismethod(obj):
-        doc = FunctionDoc(obj)
-    # prepare all the lines
-    lines = [obj_sig]
-    if obj.__doc__: # this handles an empty docstring
-        for section_name in doc.sections:
-            # we already dealt with "Signature" and idk what "index" is
-            if section_name in ('Signature', 'index'):
-                continue
-            # bug where a section does not exists and it is still parsed by numpydoc
-            # for instance this happened with the section Attributes of pd.DataFrame
-            header_exists = any(l.strip().startswith(section_name)
-                                for l in obj.__doc__.splitlines())
-            if not header_exists and section_name not in ('Summary', 'Extended Summary'):
-                continue
-            converted = numpydoc_section_to_md_lines(doc,
-                                                     section_name=section_name,
-                                                     examples_md_flavor=examples_md_flavor,
-                                                     remove_doctest_blanklines=remove_doctest_blanklines)
-            lines.extend(converted)
-    # assemble the lines
-    md = '\n'.join(lines).strip()
-    return md
+    if not isinstance(obj, str):
+        raise TypeError('Expected parameter `obj` to be a string of an importable python object '
+                        f'e.g. "pandas.DataFrame", "datetime.datetime", ... . Got type {type(obj)} instead')
+
+    config = Config(alias=alias,
+                    examples_md_lang=examples_md_lang,
+                    remove_doctest_blanklines=remove_doctest_blanklines,
+                    remove_doctest_skip=remove_doctest_skip,
+                    md_section_level=md_section_level,
+                    ignore_custom_section_warning=ignore_custom_section_warning,
+                    members=[] if members is None else members)
+    return parse_and_render(obj_namespace=obj, config=config)
 
 
-# # Parse from placeholder
-#
-# e.g. <code>{{"obj":"npdoc_to_md.testing.example_func"}}</code>
+# # Render using text 
 
-def _render_placeholder_string(placeholder_string):
+# ## Helpers to render a single placeholder
+
+# +
+def _render_placeholder(placeholder:Placeholder) -> str:
     r"""
-    Converts the docstring of a Python function, class or method
-    defined in a placeholder (see placeholder_string in Parameters)
-    to a pretty markdown string.
-
-    Parameters
-    ----------
-    placeholder_string : str
-        JSON dictionnary decorated by {} (see Examples). Keys:
-        * "obj": name of an importable Python class, function or method
-        * _(optional)_ "alias": namespace to use for the markdown render
-            (e.g. pd.DataFrame instead of pandas.DataFrame). If this is not
-            provided then the namespace is taken from the key "obj".
-        * _(optional)_ "ex_md_flavor": In which language/flavor to render example outputs.
-            See https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet#code-and-syntax-highlighting
-            If not provided outputs are encapsulated by \```python\```
-            to create a markdown Python code block. You can use any flavor
-            you please or the special flag "raw" which will be a code block
-            without flavor. If you choose "markdown" there is no encapsulation.
-        * _(optional)_ "remove_doctest_blanklines": If True (default), replaces "<BLANKLINE>"
-            used for doctest with an empty string.
-            See https://docs.python.org/3.8/library/doctest.html#how-are-docstring-examples-recognized
+    Uses instructions in given placeholder (syntax given by library)
+    to find a Python object and render its docstring in Markdown.
 
     Examples
     --------
-    >>> from npdoc_to_md.core import _render_placeholder_string
-    >>> 
-    >>> md = _render_placeholder_string('{{"obj":"pandas.DataFrame", "alias":"pd.DataFrame", "ex_md_flavor":"raw"}}')
+    >>> from npdoc_to_md.placeholder import Placeholder
+    >>>
+    >>> p = Placeholder('{{"obj":"npdoc_to_md.testing.now_utc", "alias":"now_utc", "examples_md_lang":"raw"}}')
+    >>> md = _render_placeholder(placeholder=p)
     """
-    # remove one pair of brackets so instead of {{data}} we have {data}
-    # and it can be read as JSON
-    parsed = json.loads(placeholder_string[1:-1])
-    # check keys
-    allowed_keys = {'alias', 'obj', 'ex_md_flavor', 'remove_doctest_blanklines'}
-    not_allowed_keys = set(parsed.keys()) - allowed_keys
-    if not_allowed_keys:
-        raise ValueError((f'Invalid keys used for placeholder string: {not_allowed_keys}\n'
-                          f'Valid keys are: {allowed_keys}\n'
-                          f'Placeholder string that caused error was "{placeholder_string}"'))
-    # get the object namespace
-    obj_namespace = parsed['alias'] if 'alias' in parsed else parsed['obj']
-    # import object or method
-    obj = locate(parsed['obj'])
-    if not obj:
-        raise NonExistentObjectException(f'Could not locate object "{parsed["obj"]}"')
-    # search for examples md flavor
-    examples_md_flavor = parsed.get('ex_md_flavor','python')
-    # check if the user wants doctest blanklines removed
-    ## for JSON the user should write "true" instead of "True" but in case he forgets we can convert that
-    remove_doctest_blanklines = parsed.get('remove_doctest_blanklines', True)
-    if isinstance(remove_doctest_blanklines, str):
-        if remove_doctest_blanklines.lower() == 'true':
-            remove_doctest_blanklines = True
-        elif remove_doctest_blanklines.lower() == 'false':
-            remove_doctest_blanklines = False
-    ## at this point remove_doctest_blanklines must be a bool
-    if remove_doctest_blanklines not in (True, False):
-        raise ValueError('Argument remove_doctest_blanklines must be a boolean!')
-
-    # convert to md
-    rendered = render_md_from_obj_docstring(obj, obj_namespace, examples_md_flavor=examples_md_flavor,
-                                            remove_doctest_blanklines=remove_doctest_blanklines)
+    config:Config = placeholder.config
+    rendered = render_obj_docstring(obj=placeholder.obj_namespace,
+                                    alias=config.alias,
+                                    examples_md_lang=config.examples_md_lang,
+                                    remove_doctest_blanklines=config.remove_doctest_blanklines,
+                                    remove_doctest_skip=config.remove_doctest_skip,
+                                    md_section_level=config.md_section_level,
+                                    ignore_custom_section_warning=config.ignore_custom_section_warning,
+                                    members=config.members)
     return rendered
 
 
-# # Render from markdown string
+def _render_placeholder_no_err(placeholder:Placeholder) -> str:
+    """
+    Similar to `_render_placeholder` but logs errors instead of raising
+    them.
 
-# +
-def render_md_string(text):
-    r"""
-    Renders a markdown string containing (or not) placeholders - see **docstring of
-    npdoc_to_md.render_placeholder_string** !! - to automatically fetch and convert
-    Python docstrings to pretty markdown.
+    Examples
+    --------
+    >>> from npdoc_to_md.placeholder import Placeholder
+    >>>
+    >>> # this is obviously not going to work (no module named monkey)
+    >>> # but it will not raise any exception
+    >>> p = Placeholder('{{"obj":"monkey"}}')
+    >>> md = _render_placeholder_no_err(placeholder=p)
+    >>>
+    >>> # the placeholder is returned as is, no conversion was done
+    >>> print(md)
+    {{"obj":"monkey"}}
+    """
+    try:
+        return _render_placeholder(placeholder=placeholder)
+    except Exception:
+        log(f'An exception occured when rendering this placeholder: {placeholder}',
+            level=logging.ERROR, exc_info=True)
+        return placeholder.line
+
+
+# -
+
+# ## Function to render from text
+
+def render_string(string:str, ignore_errors:bool=False) -> str:
+    r'''
+    Returns a markdown string where placeholders defined in this library have
+    been replaced with the corresponding docstrings rendered in Markdown.
+
+    See wiki folder at the root of the repo or https://github.com/ThibTrip/npdoc_to_md/wiki
+    and the examples for the placeholders syntax.
 
     Parameters
     ----------
-    text : str
-        Markdown string
-    
+    string
+        String with markdown syntax (we will split it in lines)
+        containing (or not) placeholders defined in this library
+    ignore_errors
+        If True only logs errors relative to converting placeholders
+        in the string otherwise raises such errors.
+        Also, placeholders that failed to convert will
+        be unchanged in the resulting text
+
+        Note that any string that begings with "{{" and ends with "}}" on the
+        same line is interpreted as a placeholder by the library.
+
+    CLI Examples
+    ------------
+    Note that "-" and "_" are interchangeable.
+
+    While I do make this method available for the CLI, if you are going to do similar
+    things as the examples below, I would suggest looking at the other functions of
+    the library for generating documentation. Indeed, unless you are in Bash and can use a multiline string,
+    the escaping is tricky as you can see below.
+
+    IMPORTANT: do not put spaces in the placeholders (e.g. between commas) otherwise the parsing would fail (because
+    space is a character used to separate arguments)
+
+    Bash example:
+
+    ```
+    $ STRING='"{{\"obj\":\"npdoc_to_md.testing.DocumentedClassExample\",\"remove_doctest_blanklines\":true,\"remove_doctest_skip\":true,\"examples_md_lang\":\"raw\",\"members\":[\"public$\"]}}"'
+    $ npdoc-to-md render-string -string "$STRING"
+    ```
+
+    Command Prompt example (Windows):
+
+    ```
+    $ set STRING='"{{\"obj\":\"npdoc_to_md.testing.DocumentedClassExample\",\"remove_doctest_blanklines\":true,\"remove_doctest_skip\":true,\"examples_md_lang\":\"raw\",\"members\":[\"public$\"]}}"'
+    $ npdoc-to-md render-string -string %STRING%
+    ```
+
+    Bash example (multiline):
+
+    ```
+    $ STRING='Demo:
+    > {{"obj":"npdoc_to_md.testing.DocumentedClassExample", "remove_doctest_blanklines":true, "md_section_level":3, "members":["public$"]}}'
+    $ npdoc-to-md render-string -string "$STRING"
+    ```
+
     Examples
     --------
-    >>> import pandas
-    >>> from npdoc_to_md import render_md_string
-    >>> md = ('pandas is a very cool library!\n\n # Docstring of pd.Series.to_list\n\n'
-    ...       '{{"obj":"pandas.Series.to_list", "alias":"pd.Series.to_list", "ex_md_flavor":"markdown"}}') # doctest: +SKIP
-    >>> md_rendered = render_md_string(md) # doctest: +SKIP
-    >>> print(md_rendered) # doctest: +SKIP
+    >>> from npdoc_to_md import render_string
+    >>>
+    >>> text = """
+    ... Here is a demo of npdoc_to_md.render_string. The placeholder
+    ... below will be converted to a docstring in markdown:
+    ...
+    ... ---
+    ...
+    ... {{"obj":"npdoc_to_md.testing.now_utc", "alias":"now_utc"}}
+    ... """
+    >>> md = render_string(string=text)
 
-    pandas is a very cool library!
-
-     # Docstring of pd.Series.to_list
-
-    **<span style="color:purple">pd.Series.to&#95;list</span>_()_**
-
-
-    Return a list of the values.
-
-
-    These are each a scalar type, which is a Python scalar
-    (for str, int, float) or a pandas scalar
-    (for Timestamp/Timedelta/Interval/Period)
-
-    #### Returns
-    <b><i>list</i></b> 
-
-    #### See Also
-    * numpy.ndarray.tolist : Return the array as an a.ndim-levels deep
-    nested list of Python scalars.
-    """
-    splitted = text.splitlines()
-    rendered_lines = []
-    
-    for ix, line in enumerate(splitted):
-        line = line.rstrip('\n')
-        # find strings like {{my_class,my_method,my_alias}}
-        if line.startswith('{{') and line.endswith('}}'):
-            try:
-                md = _render_placeholder_string(line)
-            except Exception as e:
-                log(f'Could not render line {ix}: "{line}"', msg_level='exception')
-                # add unrendered line
-                rendered_lines.append(line)
-                continue
-            rendered_lines.append(md)
-        else:
-            rendered_lines.append(line)
-    new_text = '\n'.join(rendered_lines)
-    return new_text
-
-
-# # Render from markdown file
-
-def render_md_file(source, destination=None, allow_same_path=False):
-    """
-    Renders a markdown file containing (or not) placeholders - see **docstring of
-    npdoc_to_md.render_placeholder_string** or npdoc_to_md's GitHub wiki page
-    "Render from object" - to automatically fetch and convert Python docstrings
-    to pretty markdown.
-
-    Parameters
-    ----------
-    source : str
-        Path to the markdown file
-    destination : str or None, default None
-        If None returns a rendered markdown string.
-        Otherwise creates or overwrites a rendered file.
-        destination cannot be equal to source!
-    allow_same_path : bool, default False
-        If :source: is the same as :destination: and
-        allow_same_path is False then an error is raised.
-        In any other case the value of this parameter
-        does not change the behavior of the function.
-
-    Raises
-    ------
-    ValueError
-        If destination is the same as source and allow_same_path is False
-    
-    Examples
-    --------
-    >>> from npdoc_to_md import render_md_file
-    >>> 
-    >>> # set source and destination
-    >>> source = "./README_UNRENDERED.md"
-    >>> destination = "./README.md"
-    >>> 
-    >>> md = render_md_file(source, destination) # doctest: +SKIP
-    """
-    # attempt to read the file
-    with open(source, mode='r', encoding='utf-8') as fh:
-        text = fh.read()
-
-    # log
-    log_msg = f'Rendering file "{source}" '
-    if destination:
-        log_msg += f'to "{destination}"'
+    >>> # demonstrating "ignore_errors": this raises no error even though we are referring to a non existent object
+    >>> md = render_string(string='{{"obj":"some_object_that_does_not_exist"}}', ignore_errors=True)
+    '''
+    if ignore_errors:
+        render_placeholder_method = _render_placeholder_no_err
+        search_placeholder_method = Placeholder.search_no_err
     else:
-        log_msg += 'to a string'
-    log(log_msg, msg_level='info')
+        render_placeholder_method = _render_placeholder
+        search_placeholder_method = Placeholder.search
 
+    new_lines:List[str] = []
+    for line in string.splitlines():
+        placeholder:Union[Placeholder, None] = search_placeholder_method(line)
+        if placeholder is not None:
+            rendered = render_placeholder_method(placeholder=placeholder)
+            new_lines.append(rendered)
+        else:
+            new_lines.append(line)
+    return '\n'.join(new_lines)
+
+
+# # Render using file
+
+def render_file(source:str, destination:Optional[str]=None,
+                ignore_errors:bool=False) -> Union[RenderedFile, RenderedFileCLI]:
+    """
+    Reads markdown file at path `source` and replaces placeholders defined in this library
+    with the corresponding docstrings. It then returns the "converted" text.
+
+    If a `destination` is given we save the converted text at this path.
+
+    See wiki folder at the root of the repo or https://github.com/ThibTrip/npdoc_to_md/wiki
+    for the placeholders syntax.
+
+    Parameters
+    ----------
+    source
+        Path to the markdown file
+    destination
+        If None only returns a converted markdown string.
+        Otherwise it also creates or overwrites the file
+        at this path with the converted markdown string.
+    ignore_errors
+        Same logic as in function `render_string` (see its docstring)
+
+    CLI Examples
+    ------------
+    Note that "-" and "_" are interchangeable
+
+    ```
+    $ npdoc-to-md render-file -source "./docs/Render file.npmd" --destination "./docs/Render file.md"
+    ```
+
+    Since we are using python-fire for the CLI it is possible to access attributes
+    of the class (RenderedFile) instance that is returned. In the example below
+    we are acccessing the attribute `rendered_text`:
+
+    ```
+    $ npdoc-to-md render-file -source "./docs/Render file.npmd" --destination "./docs/Render file.md" - rendered-text
+    ```
+
+    See also the python-fire guide: https://github.com/google/python-fire/blob/master/docs/guide.md
+
+    Returns
+    -------
+    npdoc_to_md.RenderedFile | npdoc_to_md.RenderedFileCLI
+        Returns RenderedFile object if using this function in Python.
+        Returns RenderedFileCLI if using this function in CLI.
+        See docstring of these objects.
+
+    Examples
+    --------
+    >>> from npdoc_to_md import render_file
+    >>>
+    >>> source = "./README.md"
+    >>> destination = "./README_converted.md"
+    >>> rendered_file = render_file(source=source, destination=destination) # doctest: +SKIP
+    """
+    # read contents
+    log(f'Reading file contents at path {source}')
+    with open(source, mode='r', encoding='utf-8', newline='\n') as fh:
+        original_text = fh.read()
     # render
-    new_text = render_md_string(text)
+    log('Rendering file contents')
+    rendered_text = render_string(string=original_text, ignore_errors=ignore_errors)
 
     # save
     if destination is not None:
-        if (pathlib.Path(source) == pathlib.Path(destination)) and not allow_same_path:
-            raise ValueError(('source cannot be the same as destination! '
-                              'This is to avoid accidental overwriting of your docs.'))
-        with open(destination, mode='w', encoding='utf-8') as fh:
-            fh.write(new_text)
-    return new_text
+        log(f'Saving rendered contents to path {destination}')
+        with open(destination, mode='w', encoding='utf-8', newline='\n') as fh:
+            fh.write(rendered_text)
+    return RenderedFile(source=source, destination=destination,
+                        original_text=original_text, rendered_text=rendered_text)
+
+
+# # Render using folder
+
+def render_folder(source:str,
+                  destination:Optional[str]=None,
+                  recursive:bool=False,
+                  ignore_errors:bool=False,
+                  pattern:Optional[str]=None,
+                  case_sensitive:bool=False) -> Union[List[RenderedFile], RenderedFilesCLI]:
+    r"""
+    Reads all markdown files in the folder at path `source`
+    and for each markdown file, replaces placeholders defined in this library
+    with the corresponding docstrings.
+
+    If a `destination` folder is given we also save converted files there using
+    the same folder structure (case of `recursive=True`) and also the same
+    file names, except the extensions that always get converted to ".md"
+    (unless they already matched ".md" case insensitive) e.g.:
+    * `some_lib/docs_templates/Home.npmd` -> `some_lib/docs/Home.md`
+    * `some_lib/docs_templates/Logging.MD` -> `some_lib/docs/Logging.MD`
+    * `some_lib/docs_templates/cool_subpackage/Home.npmd` -> `some_lib/docs/cool_subpackage/Home.md`
+
+    See wiki folder at the root of the repo or https://github.com/ThibTrip/npdoc_to_md/wiki
+    for the placeholders syntax.
+
+    Parameters
+    ----------
+    source
+        Path to the folder containing markdown files
+    destination
+        If None no file operations is done but you still get the result
+        of the rendering (see sections Examples | CLI Examples and Returns)
+    recursive
+        If False only looks for markdown files directly in folder `source`
+        otherwise also looks inside subfolders
+    ignore_errors
+        Same logic as in function `render_string` (see its docstring)
+    pattern
+        Regex pattern for matching file names in folder `source`
+        e.g. "(\.md|\.txt)$" (file names with the extension ".md"
+        or ".txt")
+
+        By default we use a regex pattern matching "md" and "npmd"
+        extensions. See attributes `template_files` and `template_files_insensitive`
+        of class `npdoc_to_md.helpers.Patterns`
+    case_sensitive
+        Whether the `pattern` is case sensitive. By default this is False (`pattern` is
+        case insensitive)
+
+    CLI Examples
+    ------------
+    Note that "-" and "_" are interchangeable
+
+    ```
+    $ npdoc-to-md render-folder -source "./docs" --destination "./docs" --ignore-errors --recursive
+    ```
+
+    Since we are using python-fire for the CLI it is possible to work with the returned object (a list
+    of RenderedFileCLI instances). In the example below we are acccessing the attribute `rendered_text`
+    of the first item:
+
+    ```
+    $ npdoc-to-md render-folder -source "./docs" --destination "./docs" --ignore-errors --recursive - 0 - rendered_text
+    ```
+
+    See also the python-fire guide: https://github.com/google/python-fire/blob/master/docs/guide.md
+
+    Returns
+    -------
+    list[npdoc_to_md.RenderedFile] | RenderedFilesCLI
+        Returns list[RenderedFile] if using this function in Python.
+        Returns RenderedFilesCLI if using this function in the CLI.
+
+        See docstring of these objects.
+
+    Examples
+    --------
+    >>> from npdoc_to_md import render_folder
+    >>>
+    >>> source = "./docs_templates"
+    >>> destination = "./docs"
+    >>> rendered_files = render_folder(source=source, destination=destination) # doctest: +SKIP
+    """
+    # get pattern object for extensions
+    if pattern is None:
+        pattern:re.Pattern = Patterns.template_files if case_sensitive else Patterns.template_files_insensitive
+    else:
+        flags = re.UNICODE if case_sensitive else re.IGNORECASE | re.UNICODE
+        pattern = re.compile(pattern, flags=flags)
+
+    # get markdown files in folder
+    filepaths = FileOperations.list_files(folder=source, pattern=pattern, recursive=recursive)
+    nb_files = len(filepaths)
+
+    # render markdown files
+    rendered_files = []
+    log(f'{"#"*10} Processing folder "{source}" {"#"*10}')
+    for ix, filepath in enumerate(filepaths):
+        log(f'{"-"*10} Processing path {ix+1}/{nb_files} {"-"*10}')
+        if destination is not None:
+            destination_path = FileOperations.switch_folder(source_folder=source,
+                                                            destination_folder=destination,
+                                                            filepath=filepath)
+            # replace extension to Markdown (case of template or otherwise)
+            not_md = not destination_path.lower().strip().endswith('.md')
+            if not_md:
+                destination_path = str(Path(destination_path).with_suffix('.md'))
+        else:
+            destination_path = None
+        rendered_file = render_file(source=filepath, destination=destination_path, ignore_errors=ignore_errors)
+        rendered_files.append(rendered_file)
+    return rendered_files
+
+
+# # Start CLI
+
+def start_cli() -> None:
+    """
+    Starts the Command Line Interface for the library.
+    Is also the entry point in the file `setup.py`
+    """
+    try:
+        import fire
+    except ModuleNotFoundError as e:
+        raise ModuleNotFoundError('Please install optional dependency "fire" (pip install fire) '
+                                  'if you want to use the CLI') from e
+
+    # change return types for render_file and render_folder
+    def rendered_files_to_rendered_files_cli(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            result = func(*args, **kwargs)
+            if isinstance(result, RenderedFile):
+                return RenderedFileCLI._from_rendered_file(obj=result)
+            elif isinstance(result, list):
+                assert all(isinstance(f, RenderedFile) for f in result)
+                return RenderedFilesCLI(RenderedFileCLI._from_rendered_file(obj=f) for f in result)
+            else:
+                raise TypeError(f'Unexpected return type from function {func.__name__}: {type(result)}')
+        return wrapper
+
+    # cli mapping (which subcommand executes which function)
+    cli_mapping = {'render-obj-docstring':render_obj_docstring,
+                   'render-string':render_string,
+                   'render-file':rendered_files_to_rendered_files_cli(render_file),
+                   'render-folder':rendered_files_to_rendered_files_cli(render_folder)}
+
+    # make it possible to use hyphens or underscore for subcommand
+    # (I prefer transforming the arg to adding subcommands in the `cli_mapping`
+    # because this would clutter the help)
+    def hyphenize_subcommand():
+        # check if argument was passed
+        subcommand_ix = 1
+        arg_passed = len(sys.argv) >= subcommand_ix + 1
+        if not arg_passed:  # pragma: no cover
+            return
+        # check if argument has an underscore
+        arg = sys.argv[subcommand_ix]
+        if '_' not in arg:
+            return
+        # change the argument and check if it corresponds to any subcommand
+        aliased = arg.replace('_', '-')
+        if aliased in cli_mapping:
+            log(f'Transformed subcommand: {arg} -> {aliased}', level=logging.DEBUG)
+            sys.argv[subcommand_ix] = aliased
+
+    hyphenize_subcommand()
+
+    # fire CLI
+    fire.Fire(cli_mapping)
