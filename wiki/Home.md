@@ -67,21 +67,21 @@ Here is an example of a placeholder (see the description of the parameters for t
 
 * members: **_list[str] or None, default None__**
 
-  Only relevant for classes. If members is not None or an empty list we will raise a TypeError if the object is not a class.
-  When a list of members are given we will also pull and convert docstrings from these class members.
+  When a list of members are given, in addition to rendering the docstring of a given object (`obj`)
+  we will also render the docstrings of given members.
 
   We use a **special syntax** for indicating which members to document:
-  * private$: flag that indicates private methods (start with a single "_")
-  * dunder$: flag that indicates "dunder" methods, usually system method such as `__setattr__` (start with two or more "_")
+  * private$: flag that indicates private members (start with a single "_")
+  * dunder$: flag that indicates "dunder" members, usually system method such as `__setattr__` (start with two or more "_")
   * public$: any member that does not fit under `private$` and `dunder$`
   * `+member` or `member`: member to include
   * `-member`: member to exlude
 
   Examples:
 
-  `["public$", "-foo"]` -> all public members except `foo`
+  `npdoc-to-md render-obj-docstring -obj some_library.TestClass ["public$", "-foo"]` -> all public members of class TestClass except `foo`
 
-  `["private$", "foo", "+bar"]` -> private members plus `foo` and `bar`
+  `npdoc-to-md render-obj-docstring -obj some_library.TestClass ["private$", "foo", "+bar"]` -> all private members of class TestClass plus `foo` and `bar`
 
   Note: the order of flags/members is preserved
 
